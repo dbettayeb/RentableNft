@@ -45,7 +45,20 @@
 // const { MNEMONIC, PROJECT_ID } = process.env;
 
 // const HDWalletProvider = require('@truffle/hdwallet-provider');
+require('dotenv').config()
+const { TruffleProvider } = require('@harmony-js/core')
 
+const HDWalletProvider = require("@truffle/hdwallet-provider");
+const fs = require("fs");
+require("dotenv").config();
+//Testnet
+const testnet_mnemonic = process.env.TESTNET_MNEMONIC
+const testnet_private_key = process.env.TESTNET_PRIVATE_KEY
+const testnet_url = process.env.TESTNET_0_URL
+
+//GAS - Currently using same GAS accross all environments
+gasLimit = process.env.GAS_LIMIT
+gasPrice = process.env.GAS_PRICE 
 module.exports = {
   /**
    * Networks define how you connect to your ethereum client and let you set the
@@ -66,7 +79,7 @@ module.exports = {
     //
      development: {
       host: "127.0.0.1",     // Localhost (default: none)
-      port: 8545,            // Standard Ethereum port (default: none)
+      port: 7545,            // Standard Ethereum port (default: none)
       network_id: "*",       // Any network (default: none)
      },
     //
@@ -96,6 +109,32 @@ module.exports = {
     //   network_id: 2111,   // This network is yours, in the cloud.
     //   production: true    // Treats this network as if it was a public net. (default: false)
     // }
+    testnet: {
+      network_id: '2', 
+      provider: () => {
+        const truffleProvider = new TruffleProvider(
+          testnet_url,
+          { memonic: testnet_mnemonic },
+          { shardID: 0, chainId: 2 },
+          { gasLimit: gasLimit, gasPrice: gasPrice},
+        );
+        const newAcc = truffleProvider.addByPrivateKey(testnet_private_key);
+        truffleProvider.setSigner(newAcc);
+        return truffleProvider;
+      },
+    },
+    harmony: {
+      // Provider has to be wrapped into a function
+      provider: () =>
+        new HDWalletProvider(process.env.MNEMONIC, process.env.RPC_URL),
+      network_id: "*", // Any network (default: none)
+      gasPrice: 0,
+      gas: 4500000,
+      type: "quorum",
+    },
+
+
+
   },
 
   // Set default mocha options here, use special reporters, etc.
